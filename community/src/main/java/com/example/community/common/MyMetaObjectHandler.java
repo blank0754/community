@@ -21,10 +21,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         log.info("公共字段自动填充insert");
         log.info(metaObject.toString());
-        metaObject.setValue("createTime",LocalDateTime.now());
-        metaObject.setValue("updateTime",LocalDateTime.now());
-        metaObject.setValue("createUser",BaseContext.getCurrentId());
-        metaObject.setValue("updateUser",BaseContext.getCurrentId());
+//        metaObject.setValue("createTime",LocalDateTime.now());
+        metaObject.setValue("loginTime",LocalDateTime.now());
+//        metaObject.setValue("updateTime",LocalDateTime.now());
+//        metaObject.setValue("createUser",BaseContext.getCurrentId());
+//        metaObject.setValue("updateUser",BaseContext.getCurrentId());
     }
 
     /**

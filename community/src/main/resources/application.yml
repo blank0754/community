@@ -17,7 +17,9 @@ spring:
     port: 6379
     password: 123456
     database: 0 #操作的是0号数据库
-
+  cache:
+    redis:
+      time-to-live: 1800000
 
 mybatis-plus:
   configuration:
@@ -27,6 +29,13 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: ASSIGN_ID
-#reggie:
-#  path: /usr/local/javaapp/img/
+community:
+  imgpath: /usr/local/javaapp/img/
+  filepath: /usr/local/javaapp/file/
 
+servlet:
+  multipart:
+    enabled: true
+    max-file-size: 50MB
+    max-request-size: 50MB
+    file-size-threshold: 50MB
