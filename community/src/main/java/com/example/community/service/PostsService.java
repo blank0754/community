@@ -11,15 +11,17 @@ import org.springframework.cache.annotation.Cacheable;
 public interface PostsService extends IService<Posts> {
 
     //新增帖子
-    @CacheEvict(value = "postsCache")
     R<String> addPosts(Posts posts);
 
     //分页查询帖子
-    @Cacheable(value = "postsCache",key = "#page")
     R<Page> pageposts(int page, int pageSize, String name);
 
     //根据用户id分页查询帖子
     R<Page> pageId(int page, int pageSize, String id);
+
+    R<String> delete(Long[] ids);
+
+    R<String> update(Posts posts);
 
     //根据板块id查询帖子
 

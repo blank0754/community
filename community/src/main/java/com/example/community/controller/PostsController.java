@@ -14,7 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +40,7 @@ public class PostsController {
      * @return
      */
     @PostMapping("/add")
+    @CacheEvict(value = {"posts", "postid"})
     public R<String> addPosts(@RequestBody Posts posts){
         return postsService.addPosts(posts);
     }
@@ -63,11 +66,41 @@ public class PostsController {
      * @return
      */
     @GetMapping("/pageid")
-    @Cacheable(key = "#p1.toString() + (#p0 != null ? # p0.toString() : '')")
+    @Cacheable(value = "postsid",key = "#p1.toString() + (#p0 != null ? # p0.toString() : '')")
     public R<Page> pageId(int page, int pageSize){
         //从线程空间获取id
         String currentId = String.valueOf(BaseContext.getCurrentId());
         return postsService.pageId(page,pageSize,currentId);
     }
+
+
+    /**
+     * 根据id单个或批量删除帖子
+     *
+     * @param ids
+     * @return
+     */
+    @PostMapping("/delete")
+    @Transactional
+    @CacheEvict(value = {"posts", "postid"})
+    public R<String> delete(Long[] ids) {
+        return postsService.delete(ids);
+
+    }
+
+    /**
+     * 根据id修改帖子
+     *
+     * @param posts
+     * @return
+     */
+    @PostMapping("/update")
+    @Transactional
+    @CacheEvict(value = {"posts", "postid"})
+    public R<String> update(@RequestBody Posts posts) {
+        return postsService.update(posts);
+
+    }
+
 
 }

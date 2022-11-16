@@ -39,3 +39,12 @@ servlet:
     max-file-size: 50MB
     max-request-size: 50MB
     file-size-threshold: 50MB
+
+# 阿里配置
+al:
+  oss: #存储
+    endpoint: oss-cn-heyuan.aliyuncs.com
+    accessKeyId: LTAI5tHCCVRk515GcHtjVo9z
+    accessKeySecret: TPAzianBuU1Xbgq12xbOt02RkjVpZ5
+    bucketName: community-blank
+    url: https://community-blank.oss-cn-heyuan.aliyuncs.com

@@ -1,8 +1,14 @@
 package com.example.community.controller;
 
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.baidubce.model.ApiExplorerResponse;
 import com.example.community.common.R;
+import com.example.community.utils.ImageDemo;
+import com.example.community.utils.OssTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,12 +30,11 @@ import java.util.UUID;
 @RequestMapping("/common")
 public class CommonController {
 
-    @Value("${community.imgpath}")
-    private String imgPath;
-
     @Value("${community.filepath}")
     private String filePath;
 
+    @Autowired
+    private OssTemplate ossTemplate;
 
     /**
      * 实现文件上传
@@ -67,69 +72,71 @@ public class CommonController {
      * @param file
      * @return
      */
-    @PostMapping("/imgupload")
-    public R<String> upload(MultipartFile file){//这里的file必须跟前端的name=“file”保持一致
+    @PostMapping("/upload/image")
+    public R<String> upload(MultipartFile file) throws IOException {//这里的file必须跟前端的name=“file”保持一致
         //file是一个临时文件，需要转存到指定位置，否则本次请求完成后临时文件会删除
         log.info(file.toString());
+        String imgPath = ossTemplate.upload(file.getOriginalFilename(), file.getInputStream());
 
-        //获得上传时的原始文件名
-        String originalFilename = file.getOriginalFilename();
-        String substring = originalFilename.substring(originalFilename.lastIndexOf("."));
-
-
-        //使用UUID重新生成文件名，防止图片文件覆盖
-        String fileName = UUID.randomUUID().toString() + substring;
-
-        //创建一个目录对象
-        File dir = new File(imgPath);
-        //判断目录是否存在
-        if(!dir.exists()){
-            //目录不存在，需要创建
-            dir.mkdir();
+        ImageDemo imageDemo = new ImageDemo();
+        String s = imageDemo.ImageDemo1(imgPath);
+        System.out.println(s);
+        //转化请求的 json 数据
+        JSONObject jsonObject = JSONObject.parseObject(s);
+        //获取 conclustionType 数组
+        String conclusionType = jsonObject.getString("conclusionType");
+        if (conclusionType.equals("1")){
+            return R.success(imgPath);
         }
 
-        try{
-            file.transferTo(new File(imgPath+originalFilename));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return R.success(originalFilename);
-    }
-
-    /**
-     * 图片下载
-     * @param name
-     * @param response
-     */
-    @GetMapping("/download")
-    public void download(String name, HttpServletResponse response){
-
-        try {
-            //输入流，通过输入流读取文件内容
-            FileInputStream fileInputStream = new FileInputStream(new File(imgPath+name));
-
-            //输出流，通过输出流文件写回浏览器，在浏览器展示图片了
-            ServletOutputStream outputStream = response.getOutputStream();
-
-            //设置response响应的文件类型为imge
-            response.setContentType("image/jpeg");
-
-
-            int len = 0;
-            byte[] bytes = new byte[1024];
-            while ((len = fileInputStream.read(bytes)) != -1) {
-                outputStream.write(bytes,0,len);
-                outputStream.flush();
+        if (conclusionType.equals("2")){
+            //获取 data 数组
+            JSONArray data = jsonObject.getJSONArray("data");
+            String msg = null;
+            for (int i = 0; i < data.size(); i++) {
+                //获取 msg 返回信息
+                msg = data.getJSONObject(i).getString("msg");
+                System.out.println(msg);
             }
-
-            //关闭资源
-            outputStream.close();
-            fileInputStream.close();
-
-        }catch (Exception e){
-            e.printStackTrace();
+            return R.error(msg);
         }
+        return R.success(imgPath);
     }
+
+//    /**
+//     * 图片下载
+//     * @param name
+//     * @param response
+//     */
+//    @GetMapping("/download")
+//    public void download(String name, HttpServletResponse response){
+//
+//        try {
+//            //输入流，通过输入流读取文件内容
+//            FileInputStream fileInputStream = new FileInputStream(new File(imgPath+name));
+//
+//            //输出流，通过输出流文件写回浏览器，在浏览器展示图片了
+//            ServletOutputStream outputStream = response.getOutputStream();
+//
+//            //设置response响应的文件类型为imge
+//            response.setContentType("image/jpeg");
+//
+//
+//            int len = 0;
+//            byte[] bytes = new byte[1024];
+//            while ((len = fileInputStream.read(bytes)) != -1) {
+//                outputStream.write(bytes,0,len);
+//                outputStream.flush();
+//            }
+//
+//            //关闭资源
+//            outputStream.close();
+//            fileInputStream.close();
+//
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
+//    }
 
 
 }
