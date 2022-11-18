@@ -18,6 +18,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,34 +39,31 @@ public class CommonController {
     private OssTemplate ossTemplate;
 
     /**
-     * 实现文件上传
+     * 单个文件上传
      * @param file 上传的文件对象
      */
-    @RequestMapping("/fileupload")
-    @ResponseBody
-    public R<String> fileUpload(MultipartFile file){
-        try {
-            //path:目标目录
-            File path=new File(filePath);
-            if(!path.exists()){
-                path.mkdirs();
-            }
-            String originalFilename=file.getOriginalFilename();
-            String substring = originalFilename.substring(originalFilename.lastIndexOf("."));
-
-            //使用UUID重新生成文件名，防止图片文件覆盖
-            String fileName = UUID.randomUUID().toString() + substring;
-
-            //descFile:目标目录=文件夹名+文件名
-            File descFile=new File(path.getAbsolutePath()+"/"+fileName);
-            //将上传的文件保存到指定的目标目录下
-            file.transferTo(descFile);
-            return R.success(originalFilename);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return R.error("文件上传失败");
-        }
+    @RequestMapping("/upload/file")
+    public R<String> fileUpload(MultipartFile file) throws IOException {
+        log.info(file.toString());
+        String imgPath = ossTemplate.uploadfile(file.getOriginalFilename(), file.getInputStream());
+        return R.success(imgPath);
     }
+    /**
+     * 多个文件上传
+     * @param files
+     * @return
+     */
+    @RequestMapping("/upload/files")
+    public R<List> filesUpload(MultipartFile[] files) throws IOException {
+        List<String> usrList = new ArrayList<>(files.length);
+        for (MultipartFile file : files) {
+            String uploadfile = ossTemplate.uploadfile(file.getOriginalFilename(), file.getInputStream());
+            usrList.add(uploadfile);
+        }
+        return R.success(usrList);
+    }
+
+
 
 
     /**
@@ -102,6 +101,26 @@ public class CommonController {
         }
         return R.success(imgPath);
     }
+
+    /**
+     * 单个删除
+     * @param url 文件url
+     */
+    @PostMapping("/upload/delete")
+    public R<String> delete(String url) {
+        // 处理 url
+        log.info("============入参：{}", url);
+        int file = url.indexOf("file");
+        String path = url.substring(file);
+        log.info("============path：{}", path);
+        /**
+         * 填写文件名。文件名包含路径，不包含Bucket名称。
+         * 例如2021/09/14/52c6a3114e634979a2934f1ea12deaadfile.png。
+         */
+        return ossTemplate.ossDelete(path);
+
+    }
+
 
 //    /**
 //     * 图片下载
