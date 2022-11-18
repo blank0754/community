@@ -88,11 +88,9 @@ public class OssTemplate {
 
     /**
      * 具体删除代码
-     * @param bucket backet
-     * @param pathList 文件url列表
+     *
      * @return
      */
-    @Test
     public R<String> ossDelete(String path) {
         String bucketName = ossConfig.getBucketName();
             OSS ossClient = new OSSClientBuilder().build(
