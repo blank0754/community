@@ -1,5 +1,7 @@
 package com.example.community.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -13,9 +15,11 @@ public class Posts implements Serializable {
 
     private String title;//标题
 
-    private String user_id;
+    private String userId;
 
-    private String role_id;
+    private String plateId;
 
+    //创建时间
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 }

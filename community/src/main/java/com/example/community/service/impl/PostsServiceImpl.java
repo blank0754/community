@@ -43,7 +43,7 @@ public class PostsServiceImpl extends ServiceImpl<PostsMapper, Posts> implements
         //从线程空间获取id
         String currentId = String.valueOf(BaseContext.getCurrentId());
         posts.setCreateTime(LocalDateTime.now());//设置时间
-        posts.setUser_id(currentId);
+        posts.setUserId(currentId);
         String s1 = "text=" + posts.getText();
         System.out.println(s1);
 
@@ -133,7 +133,7 @@ public class PostsServiceImpl extends ServiceImpl<PostsMapper, Posts> implements
         //2.构造条件构造器
         LambdaQueryWrapper<Posts> queryWrapper = new LambdaQueryWrapper();
         //添加一个过滤条件
-        queryWrapper.like(StringUtils.isNotEmpty(id),Posts::getUser_id,id);//name不等于空时执行查询
+        queryWrapper.like(StringUtils.isNotEmpty(id),Posts::getUserId,id);//name不等于空时执行查询
 
         //排序条件
         queryWrapper.orderByDesc(Posts::getCreateTime);//排序条件是创建时间降序

@@ -11,5 +11,7 @@ import java.time.LocalDateTime;
 public class Role implements Serializable {
     private String id;
     private String roleName;
+    //创建时间
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 }
