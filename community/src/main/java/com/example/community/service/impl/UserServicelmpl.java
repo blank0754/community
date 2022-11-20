@@ -1,6 +1,7 @@
 package com.example.community.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.community.common.R;
 import com.example.community.entity.Password;
@@ -13,6 +14,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -20,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 @Service
-
 public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Autowired
@@ -80,8 +81,12 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
             return R.error("用户名重复");
 
         }else {
-            //设置初始密码,需要进行md5加密处理
-            user.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
+//            //设置初始密码,需要进行md5加密处理
+//            user.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
+            //进行BCrypt加密
+            BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+            String newPassword = bCryptPasswordEncoder.encode(user.getPassword());
+            user.setPassword(newPassword);
             user.setCreateTime(LocalDateTime.now());//添加注册时间
             user.setCount(0);
             user.setRoleId(0);//设置为普通用户
@@ -142,6 +147,15 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
         redisTemplate.delete(id);
         return R.success("退登成功");
 
+    }
+
+    @Override
+    public User getByUsername(String s) {
+        //根据页面提交的用户名username查询数据库
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getUsername,s);
+        User one = userService.getOne(queryWrapper);
+        return one;
     }
 
 }

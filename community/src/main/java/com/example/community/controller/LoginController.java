@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * 登录注册模块
+ * 登录注册模块（已废弃）
  */
 @RestController
 @Slf4j
@@ -29,12 +29,12 @@ public class LoginController {
      * @param user
      * @return
      */
-    @PostMapping
-    public R<String> login(@RequestBody User user) {
-        log.info("开始登录");
-        return userService.login(user);
-
-    }
+//    @PostMapping
+//    public R<String> login(@RequestBody User user) {
+//        log.info("开始登录");
+//        return userService.login(user);
+//
+//    }
 
     /**
      * 用户注册

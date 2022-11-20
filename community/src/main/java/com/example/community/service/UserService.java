@@ -24,4 +24,6 @@ public interface UserService extends IService<User> {
     R<String> passwordUpdate(Password password);
 
     R<String> outLogin(String id);
+
+    User getByUsername(String s);
 }
