@@ -14,4 +14,12 @@ public class Role implements Serializable {
     //创建时间
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
+
+    private String code;
+
+    //更新时间
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
+
+    private String remark;
 }

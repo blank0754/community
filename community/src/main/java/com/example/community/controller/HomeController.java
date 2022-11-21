@@ -8,6 +8,8 @@ import com.example.community.entity.User;
 import com.example.community.service.RoleService;
 import com.example.community.service.UserService;
 import com.example.community.utils.Jwt;
+import com.example.community.utils.JwtUtils;
+import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -35,12 +37,12 @@ public class HomeController{
      * @return
      */
     @PostMapping("/userInformation")
-    public R<User> userInformation() {
+    public R<User> userInformation(@RequestHeader String token) {
         log.info("开始查询用户信息");
-
-        //从线程空间获取id
-        String currentId = String.valueOf(BaseContext.getCurrentId());
-        return userService.userInformation(currentId);
+        Claims claims1 = JwtUtils.parseJWT(token);
+        //获取id
+        String jti = (String) claims1.get("jti");
+        return userService.userInformation(jti);
 
     }
 

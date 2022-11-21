@@ -1,10 +1,16 @@
 package com.example.community.common.security;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.community.common.BaseContext;
 import com.example.community.common.R;
+import com.example.community.entity.Menu;
+import com.example.community.entity.Role;
+import com.example.community.service.MenuService;
+import com.example.community.service.RoleService;
 import com.example.community.utils.Jwt;
 import com.example.community.utils.JwtUtils;
+import com.example.community.utils.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -18,7 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 登录成功处理器
@@ -27,6 +35,12 @@ import java.util.concurrent.TimeUnit;
 public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private RoleService roleService;
+
+    @Autowired
+    private MenuService menuService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException, ServletException {
@@ -41,8 +55,31 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         valueOperations.set(id, token, 30, TimeUnit.MINUTES);
 
+        List<Role> roleList = roleService.list(new QueryWrapper<Role>().inSql("id", "select role_id from role_user where user_id=" + id));
 
-        outputStream.write(JSONUtil.toJsonStr(R.success(token)).getBytes());
+        //遍历所有角色获取所有菜单权限 而且不能重复
+        //select * from menu WHERE id IN(select menu_id from menu_role where role_id= 2)
+        Set<Menu> menuSet = new HashSet<>();
+        for (Role role:roleList) {
+            List<Menu> menuList = menuService.list(new QueryWrapper<Menu>().inSql("id", "select menu_id from menu_role where role_id=" + role.getId()));
+            for (Menu menu:menuList){
+                    menuSet.add(menu);
+            }
+        }
+        List<Menu> menuList = new ArrayList<>(menuSet);
+
+
+        //排序
+        menuList.sort(Comparator.comparing(Menu::getOrderNum));
+
+
+        List<Menu> menuList1 = menuService.buildTreeMenu(menuList);
+        System.out.println("menuList1---"+menuList1);
+
+
+
+
+        outputStream.write(JSONUtil.toJsonStr(R.success(token).add("menuList",menuList1)).getBytes());
         outputStream.flush();
         outputStream.close();
     }

@@ -15,6 +15,7 @@ public class User implements Serializable {//反序列化
     private String id;
     private String username;
     private String password;
+    private String image;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;//注册时间
     private LocalDateTime loginTime;//登录时间

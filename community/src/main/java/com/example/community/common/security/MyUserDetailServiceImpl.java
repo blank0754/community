@@ -6,6 +6,7 @@ import com.example.community.entity.User;
 import com.example.community.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -41,10 +42,15 @@ public class MyUserDetailServiceImpl implements UserDetailsService {
         user.setCount(i);
         user.setLoginTime(LocalDateTime.now());
         userService.updateById(user);
-        return new org.springframework.security.core.userdetails.User(user.getUsername(),user.getPassword(),getUserAuthority());
+        return new org.springframework.security.core.userdetails.User(user.getUsername(),user.getPassword(),getUserAuthority(user.getId()));
     }
 
-    public List<GrantedAuthority> getUserAuthority() {
-        return new ArrayList<>();
+    /**
+     * 鉴权
+     * @return
+     */
+    public List<GrantedAuthority> getUserAuthority(String id) {
+        String authority = userService.getUserAuthorityInfo(id);
+        return AuthorityUtils.commaSeparatedStringToAuthorityList(authority);
     }
 }

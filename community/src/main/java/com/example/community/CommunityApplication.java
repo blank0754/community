@@ -9,6 +9,8 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import java.nio.charset.Charset;
+
 @Slf4j
 @SpringBootApplication//声明他是启动类
 @EnableTransactionManagement//开启事务注解
@@ -18,7 +20,8 @@ public class CommunityApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(CommunityApplication.class, args);
-        log.info("111");
+        System.out.println(Charset.defaultCharset());//查看当前jdk编码
+        log.info("卧槽");
     }
 
 }

@@ -4,11 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.community.common.R;
+import com.example.community.entity.Menu;
 import com.example.community.entity.Password;
+import com.example.community.entity.Role;
 import com.example.community.entity.User;
 import com.example.community.mapper.UserMapper;
+import com.example.community.service.MenuService;
+import com.example.community.service.RoleService;
 import com.example.community.service.UserService;
 import com.example.community.utils.Jwt;
+import com.example.community.utils.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,7 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements UserService {
@@ -28,7 +37,13 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
     private UserService userService;
 
     @Autowired
+    private RoleService roleService;
+
+    @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private MenuService menuService;
 
     //用户登录
     @Override
@@ -156,6 +171,41 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq(User::getUsername,s);
         User one = userService.getOne(queryWrapper);
         return one;
+    }
+
+    @Override
+    public String getUserAuthorityInfo(String id) {
+        StringBuffer authority = new StringBuffer();
+        //根据用户id获取所有的角色信息集合
+        //select * from role WHERE id IN(select role_id from role_user where user_id= 1)
+        List<Role> roleList = roleService.list(new QueryWrapper<Role>().inSql("id", "select role_id from role_user where user_id=" + id));
+        System.out.println("------------"+roleList);
+        if (roleList.size()>0){
+            String collectCodeStrs = roleList.stream().map(r -> "ROLE_" + r.getCode()).collect(Collectors.joining(","));
+            authority.append(collectCodeStrs);
+        }
+        //遍历所有角色获取所有菜单权限 而且不能重复
+        //select * from menu WHERE id IN(select menu_id from menu_role where role_id= 2)
+        Set<String> menuCodeSet = new HashSet<>();
+        for (Role role:roleList) {
+            List<Menu> menuList = menuService.list(new QueryWrapper<Menu>().inSql("id", "select menu_id from menu_role where role_id=" + role.getId()));
+            for (Menu menu:menuList){
+                String perms = menu.getPerms();
+                if (StringUtil.isNotEmpty(perms)){
+                    menuCodeSet.add(perms);
+                }
+            }
+        }
+        if (menuCodeSet.size()>0){
+            authority.append(",");
+            String menuCodeStrs = menuCodeSet.stream().collect(Collectors.joining(","));
+            System.out.println(menuCodeStrs);
+        }
+
+
+
+        System.out.println("authority+++"+authority.toString());
+        return authority.toString();
     }
 
 }

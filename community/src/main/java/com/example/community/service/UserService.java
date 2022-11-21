@@ -26,4 +26,6 @@ public interface UserService extends IService<User> {
     R<String> outLogin(String id);
 
     User getByUsername(String s);
+
+    String getUserAuthorityInfo(String id);
 }
