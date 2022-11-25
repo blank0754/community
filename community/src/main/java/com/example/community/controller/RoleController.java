@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.apache.commons.lang.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -112,7 +113,7 @@ public class RoleController {
         if (list.size()!=0){
             return R.error("重名");
         }
-        role.setCreateTime(LocalDateTime.now());
+        role.setCreateTime(new Date());
         roleService.save(role);
         return R.success("修改成功");
     }

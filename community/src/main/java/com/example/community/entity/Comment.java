@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 public class Comment implements Serializable{
@@ -16,5 +17,5 @@ public class Comment implements Serializable{
     private String text;
     //创建时间
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    private Date createTime;
 }

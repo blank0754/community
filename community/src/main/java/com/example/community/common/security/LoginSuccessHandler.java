@@ -6,8 +6,10 @@ import com.example.community.common.BaseContext;
 import com.example.community.common.R;
 import com.example.community.entity.Menu;
 import com.example.community.entity.Role;
+import com.example.community.entity.User;
 import com.example.community.service.MenuService;
 import com.example.community.service.RoleService;
+import com.example.community.service.UserService;
 import com.example.community.utils.Jwt;
 import com.example.community.utils.JwtUtils;
 import com.example.community.utils.StringUtil;
@@ -41,6 +43,9 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
     private MenuService menuService;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException, ServletException {
@@ -76,10 +81,11 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         List<Menu> menuList1 = menuService.buildTreeMenu(menuList);
         System.out.println("menuList1---"+menuList1);
 
+        R<User> userR = userService.userInformation(id);
 
 
 
-        outputStream.write(JSONUtil.toJsonStr(R.success(token).add("menuList",menuList1)).getBytes());
+        outputStream.write(JSONUtil.toJsonStr(R.success(token).add("menuList",menuList1).add("currentUser",userR)).getBytes());
         outputStream.flush();
         outputStream.close();
     }

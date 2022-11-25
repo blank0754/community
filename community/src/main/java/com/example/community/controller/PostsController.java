@@ -53,7 +53,7 @@ public class PostsController {
      * @return
      */
     @GetMapping("/page")
-    @Cacheable(value = "posts",key = "#p1.toString() + (#p0 != null ? # p0.toString() : '')")
+    @Cacheable(value = "posts",key = "#p1.toString() + (#p0 != null ? # p0.toString() : '') + (#p2 != null ? # p2.toString() : '')")
     public R<Page> page(int page, int pageSize, String name){
        return postsService.pageposts(page,pageSize,name);
     }

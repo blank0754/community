@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +45,9 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private MenuService menuService;
+
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     //用户登录
     @Override
@@ -78,7 +82,7 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
         valueOperations.set(userOne.getId(), token, 30, TimeUnit.MINUTES);
         int i = userOne.getCount()+1;
         userOne.setCount(i);
-        userOne.setLoginTime(LocalDateTime.now());
+        userOne.setLoginTime(new Date());
         userService.updateById(userOne);
         return R.success(token);
     }
@@ -102,7 +106,7 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
             BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
             String newPassword = bCryptPasswordEncoder.encode(user.getPassword());
             user.setPassword(newPassword);
-            user.setCreateTime(LocalDateTime.now());//添加注册时间
+            user.setCreateTime(new Date());//添加注册时间
             user.setCount(0);
             user.setRoleId(0);//设置为普通用户
             userService.save(user);
@@ -120,6 +124,7 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
     @Cacheable(value = "userCache",key = "#id")
     public R<User> userInformation(String id){
         User user = userService.getById(id);
+        System.out.println(user);
         user.setPassword(null);
         return R.success(user);
     }
@@ -140,20 +145,24 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
     //根据id修改密码
     @Override
     public R<String> passwordUpdate(Password password){
-        //1.将页面提交的密码password进行MD5加密处理
-        String oldpassword = password.getOldpassword();
-        String o = DigestUtils.md5DigestAsHex(oldpassword.getBytes());
-
 
         User byId = userService.getById(password.getId());
-        if (byId.getPassword().equals(o)){
-            String newpassword = password.getNewpassword();
-            String n = DigestUtils.md5DigestAsHex(newpassword.getBytes());
-            byId.setPassword(n);
+        if (bCryptPasswordEncoder.matches(password.getOldpassword(),byId.getPassword())){
+            byId.setPassword(bCryptPasswordEncoder.encode(password.getNewpassword()));
             userService.updateById(byId);
             return R.success("修改成功");
+        }else {
+            return R.error("旧密码不正确");
         }
-        return R.error("旧密码不正确");
+
+//        if (byId.getPassword().equals(o)){
+//            String newpassword = password.getNewpassword();
+//            String n = DigestUtils.md5DigestAsHex(newpassword.getBytes());
+//            byId.setPassword(n);
+//            userService.updateById(byId);
+//            return R.success("修改成功");
+//        }
+//        return R.error("旧密码不正确");
     }
 
     //退出登录

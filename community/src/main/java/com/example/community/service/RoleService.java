@@ -7,9 +7,12 @@ import com.example.community.entity.Role;
 import com.example.community.entity.User;
 import org.springframework.cache.annotation.Cacheable;
 
+import java.util.List;
+import java.util.Set;
+
 
 public interface RoleService extends IService<Role> {
 
 
-    R<Role> roleSelect(String id);
+    R<Set<Role>> roleSelect(String id);
 }

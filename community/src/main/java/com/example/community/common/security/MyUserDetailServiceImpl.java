@@ -1,5 +1,6 @@
 package com.example.community.common.security;
 
+import cn.hutool.core.date.DateTime;
 import com.example.community.common.BaseContext;
 import com.example.community.common.UserCountLockException;
 import com.example.community.entity.User;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -40,7 +42,7 @@ public class MyUserDetailServiceImpl implements UserDetailsService {
         BaseContext.setCurrentId(Long.valueOf(user.getId()));//调用BaseContext设置id值到线程存储空间
         int i = user.getCount()+1;
         user.setCount(i);
-        user.setLoginTime(LocalDateTime.now());
+        user.setLoginTime(new Date());
         userService.updateById(user);
         return new org.springframework.security.core.userdetails.User(user.getUsername(),user.getPassword(),getUserAuthority(user.getId()));
     }

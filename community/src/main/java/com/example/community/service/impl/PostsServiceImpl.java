@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Date;
 
 @Slf4j
 @Service
@@ -42,7 +43,7 @@ public class PostsServiceImpl extends ServiceImpl<PostsMapper, Posts> implements
         //通过工具类调用百度api判断是否合格，合格存入数据库中，不合格返回原因
         //从线程空间获取id
         String currentId = String.valueOf(BaseContext.getCurrentId());
-        posts.setCreateTime(LocalDateTime.now());//设置时间
+        posts.setCreateTime(new Date());//设置时间
         posts.setUserId(currentId);
         String s1 = "text=" + posts.getText();
         System.out.println(s1);

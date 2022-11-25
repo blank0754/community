@@ -253,6 +253,15 @@
             <version>5.8.10</version>
         </dependency>
 
+        <!--数据校验-->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <version>2.3.5.RELEASE</version>
+        </dependency>
+
+
 
         <!-- security依赖包 （加密）-->
         <dependency>

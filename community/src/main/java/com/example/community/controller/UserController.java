@@ -4,21 +4,26 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.community.common.R;
 import com.example.community.dto.RoleDto;
+import com.example.community.dto.UserDto;
 import com.example.community.entity.Role;
+import com.example.community.entity.RoleUser;
 import com.example.community.entity.User;
 import com.example.community.service.RoleService;
+import com.example.community.service.RoleUserService;
 import com.example.community.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -33,6 +38,9 @@ public class UserController {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private RoleUserService roleUserService;
+
     /**
      * 用户表分页查询
      * @param page
@@ -41,12 +49,13 @@ public class UserController {
      * @return
      */
     @GetMapping("/page")
+    @Cacheable(value = "UserRole",key = "#p1.toString() + (#p0 != null ? # p0.toString() : '') + (#p2 != null ? # p2.toString() : '')")
     public R<Page> page(int page, int pageSize, String name){
         log.info("page={},pageSize={},name={}",page,pageSize,name);
 
         //1.构造分页构造器
         Page<User> pageinfo = new Page(page,pageSize);
-
+        Page<UserDto> userDtoPage = new Page<>();
 
         //2.构造条件构造器
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper();
@@ -57,10 +66,44 @@ public class UserController {
         queryWrapper.orderByDesc(User::getCreateTime);//排序条件是创建时间降序
 
         //3.执行查询
-        Page<User> page1 = userService.page(pageinfo, queryWrapper);//传入分页构造器和条件构造器
+        userService.page(pageinfo, queryWrapper);//传入分页构造器和条件构造器
 
-        return R.success(page1);
-    }
+        //对象拷贝
+        BeanUtils.copyProperties(pageinfo, userDtoPage, "records");
+
+        List<User> records = pageinfo.getRecords();
+        System.out.println("records"+records);
+
+        List<UserDto> list = records.stream().map((item) -> {
+            UserDto userDto = new UserDto();
+            LambdaQueryWrapper<RoleUser> queryWrapper1 = new LambdaQueryWrapper<>();
+            queryWrapper1.eq(RoleUser::getUserId,item.getId());
+            List<RoleUser> list2 = roleUserService.list(queryWrapper1);
+            Set<Role> list3 = new HashSet<>();
+            System.out.println("测试"+list2);
+            list2.stream().map((item1) -> {
+                LambdaQueryWrapper<Role> queryWrapper2 = new LambdaQueryWrapper<>();
+                queryWrapper2.eq(Role::getId, item1.getRoleId());
+                Role byId = roleService.getOne(queryWrapper2);
+                list3.add(byId);
+                System.out.println("listsssssssssssssss"+list3);
+
+                userDto.setRole(list3);
+                BeanUtils.copyProperties(item1, userDto);
+                System.out.println("11111111111"+userDto);
+                return userDto;
+            }).collect(Collectors.toList());
+            BeanUtils.copyProperties(item,userDto);
+            return userDto;
+        }).collect(Collectors.toList());
+
+
+        Page<UserDto> userDtoPage1 = userDtoPage.setRecords(list);
+        //执行查询
+        return R.success(userDtoPage1);
+        }
+
+
     /**
      * 根据id来查询用户信息
      * @param
@@ -79,6 +122,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/update")
+    @CacheEvict(value = "UserRole")
     public R<String> Update(@RequestBody User user) {
         log.info("开始修改用户信息");
         userService.updateById(user);
@@ -95,6 +139,7 @@ public class UserController {
 
     @PostMapping("/status/{status}")
     @Transactional
+    @CacheEvict(value = "UserRole")
     public R<String> updateStatus(
             @PathVariable("status") int status,
             @RequestParam List<Long> ids
@@ -119,6 +164,7 @@ public class UserController {
      * @param ids
      * @return
      */
+    @CacheEvict(value = "UserRole")
     @PostMapping("/delete")
     @Transactional
     public R<String> delete(Long[] ids) {

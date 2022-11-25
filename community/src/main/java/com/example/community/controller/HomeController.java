@@ -12,11 +12,16 @@ import com.example.community.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 主页模块
@@ -53,21 +58,32 @@ public class HomeController{
      * @return
      */
     @PostMapping("/userupdate")
-    public R<String> userUpdate(@RequestBody User user) {
+    @CacheEvict(value = "UserRole")
+    public R<String> userUpdate(@RequestBody @Valid User user, @RequestHeader String token) {
         log.info("开始修改用户信息");
+        Claims claims1 = JwtUtils.parseJWT(token);
+
+        //获取id
+        String jti = (String) claims1.get("jti");
+        user.setId(jti);
         return userService.userUpdate(user);
 
     }
 
 
     /**
-     * 根据请求头token解析的id查询用户信息
+     * 根据请求头token解析修改用户密码
      * @param
      * @return
      */
     @PostMapping("/passwordupdate")
-    public R<String> passwordUpdate(@RequestBody Password password) {
+    public R<String> passwordUpdate(@RequestBody Password password,@RequestHeader String token) {
         log.info("开始修改用户密码");
+        Claims claims1 = JwtUtils.parseJWT(token);
+
+        //获取id
+        String jti = (String) claims1.get("jti");
+        password.setId(jti);
         return userService.passwordUpdate(password);
     }
 
@@ -78,9 +94,11 @@ public class HomeController{
      * @return
      */
     @PostMapping("/roleselect")
-    public R<Role> roleSelect(@RequestBody Role role) {
+    public R<Set<Role>> roleSelect(@RequestHeader String token) {
         log.info("开始查询用户角色");
-        String id = role.getId();
+        Claims claims1 = JwtUtils.parseJWT(token);
+        //获取id
+        String id = (String) claims1.get("jti");
         return roleService.roleSelect(id);
     }
 

@@ -121,6 +121,28 @@ public class CommonController {
 
     }
 
+    /**
+     * 单个删除图片
+     * @param url 文件url
+     */
+    @PostMapping("/upload/deleteimg")
+    public R<String> deleteimg(String url) {
+        // 处理 url
+        log.info("============入参：{}", url);
+//        int file = url.indexOf("file");
+//        String path = url.substring(file);
+//        log.info("============path：{}", path);
+        /**
+         * 填写文件名。文件名包含路径，不包含Bucket名称。
+         * 例如2021/09/14/52c6a3114e634979a2934f1ea12deaadfile.png。
+         */
+        return ossTemplate.ossDelete(url);
+
+    }
+
+
+
+
 
 //    /**
 //     * 图片下载
