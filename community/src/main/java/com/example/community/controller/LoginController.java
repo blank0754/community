@@ -6,6 +6,7 @@ import com.example.community.entity.User;
 import com.example.community.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +43,7 @@ public class LoginController {
      * @return
      */
     @PostMapping("/register")
+    @CacheEvict(value = "UserRole",allEntries=true)
     public R<String> register(@RequestBody User user) {
         log.info("开始注册");
         return userService.register(user);

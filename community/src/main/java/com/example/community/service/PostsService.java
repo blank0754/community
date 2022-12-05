@@ -11,10 +11,10 @@ import org.springframework.cache.annotation.Cacheable;
 public interface PostsService extends IService<Posts> {
 
     //新增帖子
-    R<String> addPosts(Posts posts);
+    R<String> addPosts(Posts posts,String id);
 
     //分页查询帖子
-    R<Page> pageposts(int page, int pageSize, String name);
+    R<Page> pageposts(int page, int pageSize, String name,String plateName);
 
     //根据用户id分页查询帖子
     R<Page> pageId(int page, int pageSize, String id);

@@ -208,7 +208,8 @@ public class UserServicelmpl extends ServiceImpl<UserMapper, User> implements Us
         if (menuCodeSet.size()>0){
             authority.append(",");
             String menuCodeStrs = menuCodeSet.stream().collect(Collectors.joining(","));
-            System.out.println(menuCodeStrs);
+            authority.append(menuCodeStrs);
+//            System.out.println(menuCodeStrs);
         }
 
 

@@ -10,6 +10,8 @@ import com.example.community.entity.Posts;
 import com.example.community.entity.Role;
 import com.example.community.entity.User;
 import com.example.community.service.PostsService;
+import com.example.community.utils.JwtUtils;
+import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -40,9 +42,13 @@ public class PostsController {
      * @return
      */
     @PostMapping("/add")
-    @CacheEvict(value = {"posts", "postid"})
-    public R<String> addPosts(@RequestBody Posts posts){
-        return postsService.addPosts(posts);
+    @CacheEvict(value = {"posts", "postid"},allEntries=true)
+    public R<String> addPosts(@RequestBody Posts posts,@RequestHeader String token){
+
+        Claims claims1 = JwtUtils.parseJWT(token);
+        //获取id
+        String jti = (String) claims1.get("jti");
+        return postsService.addPosts(posts,jti);
     }
 
     /**
@@ -53,9 +59,9 @@ public class PostsController {
      * @return
      */
     @GetMapping("/page")
-    @Cacheable(value = "posts",key = "#p1.toString() + (#p0 != null ? # p0.toString() : '') + (#p2 != null ? # p2.toString() : '')")
-    public R<Page> page(int page, int pageSize, String name){
-       return postsService.pageposts(page,pageSize,name);
+    @Cacheable(value = "posts",key = "#p1.toString() + (#p0 != null ? # p0.toString() : '') + (#p2 != null ? # p2.toString() : '') + (#p3 != null ? # p3.toString() : '')")
+    public R<Page> page(int page, int pageSize, String name,String plateName){
+       return postsService.pageposts(page,pageSize,name,plateName);
     }
 
 
@@ -82,7 +88,7 @@ public class PostsController {
      */
     @PostMapping("/delete")
     @Transactional
-    @CacheEvict(value = {"posts", "postid"})
+    @CacheEvict(value = {"posts", "postid"},allEntries=true)
     public R<String> delete(Long[] ids) {
         return postsService.delete(ids);
 
@@ -96,7 +102,7 @@ public class PostsController {
      */
     @PostMapping("/update")
     @Transactional
-    @CacheEvict(value = {"posts", "postid"})
+    @CacheEvict(value = {"posts", "postid"},allEntries=true)
     public R<String> update(@RequestBody Posts posts) {
         return postsService.update(posts);
 

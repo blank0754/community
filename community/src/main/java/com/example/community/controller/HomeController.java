@@ -58,7 +58,7 @@ public class HomeController{
      * @return
      */
     @PostMapping("/userupdate")
-    @CacheEvict(value = "UserRole")
+    @CacheEvict(value = "UserRole",allEntries=true)
     public R<String> userUpdate(@RequestBody @Valid User user, @RequestHeader String token) {
         log.info("开始修改用户信息");
         Claims claims1 = JwtUtils.parseJWT(token);

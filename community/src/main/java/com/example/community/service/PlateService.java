@@ -10,5 +10,6 @@ public interface PlateService extends IService<Plate> {
 
     R<String> delete(String id);
 
-    R<Page> page1(int page, int pageSize);
+    R<Page> page1(int page, int pageSize, String name);
+
 }

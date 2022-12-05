@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.community.common.R;
-import com.example.community.entity.Comment;
 import com.example.community.entity.Plate;
 import com.example.community.entity.Posts;
 import com.example.community.entity.User;
@@ -30,6 +29,12 @@ public class PlateServiceImpl extends ServiceImpl<PlateMapper, Plate> implements
 
     @Override
     public R<String> add(Plate plate) {
+        LambdaQueryWrapper<Plate> queryWrapper1 = new LambdaQueryWrapper<>();
+        queryWrapper1.eq(Plate::getPlateName,plate.getPlateName());
+        List<Plate> list = plateservice.list(queryWrapper1);
+        if (list.size()!=0){
+            return R.error("板块重名");
+        }
         plateservice.save(plate);
         return R.success("新增板块成功");
     }
@@ -48,7 +53,7 @@ public class PlateServiceImpl extends ServiceImpl<PlateMapper, Plate> implements
     }
 
     @Override
-    public R<Page> page1(int page, int pageSize) {
+    public R<Page> page1(int page, int pageSize, String name) {
         log.info("page={},pageSize={},name={}",page,pageSize);
 
         //1.构造分页构造器
@@ -56,6 +61,10 @@ public class PlateServiceImpl extends ServiceImpl<PlateMapper, Plate> implements
 
         //2.构造条件构造器
         LambdaQueryWrapper<Plate> queryWrapper = new LambdaQueryWrapper();
+
+        //添加一个过滤条件
+        queryWrapper.like(StringUtils.isNotEmpty(name), Plate::getPlateName,name);//name不等于空时执行查询
+
         //排序条件
         queryWrapper.orderByDesc(Plate::getCreateTime);//排序条件是创建时间降序
 
@@ -65,4 +74,6 @@ public class PlateServiceImpl extends ServiceImpl<PlateMapper, Plate> implements
         //执行查询
         return R.success(page1);
     }
+
+
 }

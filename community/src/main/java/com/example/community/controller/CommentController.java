@@ -58,7 +58,7 @@ public class CommentController {
      * 评论删除
      */
     @PostMapping("/delete")
-    @CacheEvict(value = {"pageCommentPostsId","pageCommentUserId"})
+    @CacheEvict(value = {"pageCommentPostsId","pageCommentUserId"},allEntries=true)
     public R<String> Delete(@RequestBody Comment comment) {
         return commentService.delete(comment.getId());
     }
@@ -68,7 +68,7 @@ public class CommentController {
      * 新增帖子
      */
     @PostMapping("/add")
-    @CacheEvict(value = {"pageCommentPostsId","pageCommentUserId"})
+    @CacheEvict(value = {"pageCommentPostsId","pageCommentUserId"},allEntries=true)
     public R<String> add(@RequestBody Comment comment){
         return commentService.add(comment);
     }

@@ -19,6 +19,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,6 +42,11 @@ public class UserController {
 
     @Autowired
     private RoleUserService roleUserService;
+
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    public final static String DEFAULT_PASSWORD="123456";
 
     /**
      * 用户表分页查询
@@ -122,7 +129,8 @@ public class UserController {
      * @return
      */
     @PostMapping("/update")
-    @CacheEvict(value = "UserRole")
+    @Transactional
+    @CacheEvict(value = "UserRole",allEntries=true)
     public R<String> Update(@RequestBody User user) {
         log.info("开始修改用户信息");
         userService.updateById(user);
@@ -139,7 +147,7 @@ public class UserController {
 
     @PostMapping("/status/{status}")
     @Transactional
-    @CacheEvict(value = "UserRole")
+    @CacheEvict(value = "UserRole",allEntries=true)
     public R<String> updateStatus(
             @PathVariable("status") int status,
             @RequestParam List<Long> ids
@@ -159,25 +167,47 @@ public class UserController {
     }
 
     /**
-     * 根据id单个或批量删除菜品
+     * 根据id单个或批量删除用户
      *
      * @param ids
      * @return
      */
-    @CacheEvict(value = "UserRole")
+    @CacheEvict(value = "UserRole",allEntries=true)
     @PostMapping("/delete")
     @Transactional
-    public R<String> delete(Long[] ids) {
+    public R<String> delete(String[] ids) {
+        LambdaQueryWrapper<RoleUser> queryWrapper = new LambdaQueryWrapper();
         log.info("删除用户id为{}", ids);
-        for (Long id : ids) {
+        for (String id : ids) {
             User byId = userService.getById(id);
-            if (byId.getStatus() == 1){
+            if (byId.getStatus() == 0){
                 return R.error("用户未禁用");
             }
-            redisTemplate.delete(String.valueOf(id));
+            queryWrapper.like(RoleUser::getUserId,id);//name不等于空时执行查询
+//            redisTemplate.delete(String.valueOf(id));
+            roleUserService.remove(queryWrapper);
         }
 
         userService.removeByIds(Arrays.asList(ids));
         return R.success("成功");
     }
+
+    /**
+     * 重置密码
+     */
+
+    @GetMapping("/resetPassword/{id}")
+    @CacheEvict(value = "UserRole",allEntries=true)
+    @Transactional
+    @PreAuthorize("hasAuthority('system:user:resetPwd')")
+    public R<String> resetPassword(@PathVariable(value = "id")String id){
+        User byId = userService.getById(id);
+        byId.setPassword(bCryptPasswordEncoder.encode(DEFAULT_PASSWORD));
+        userService.updateById(byId);
+        return R.success("修改密码成功");
+    }
+
+
+
+
 }

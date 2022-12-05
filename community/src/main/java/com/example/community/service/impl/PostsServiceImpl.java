@@ -8,20 +8,26 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.community.common.BaseContext;
 import com.example.community.common.R;
-import com.example.community.entity.File;
-import com.example.community.entity.Posts;
+import com.example.community.dto.PostDto;
+import com.example.community.dto.RoleDto;
+import com.example.community.entity.*;
 import com.example.community.mapper.PostsMapper;
 import com.example.community.service.FileService;
+import com.example.community.service.PlateService;
 import com.example.community.service.PostsService;
+import com.example.community.service.UserService;
 import com.example.community.utils.RequestDemo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,16 +41,21 @@ public class PostsServiceImpl extends ServiceImpl<PostsMapper, Posts> implements
     @Autowired
     private FileService fileService;
 
+    @Autowired
+    private PlateService plateService;
+
+    @Autowired
+    private UserService userService;
+
     @Override
-    public R<String> addPosts(Posts posts) {
+    public R<String> addPosts(Posts posts,String id) {
 
 
         //接收传入的参数
         //通过工具类调用百度api判断是否合格，合格存入数据库中，不合格返回原因
-        //从线程空间获取id
-        String currentId = String.valueOf(BaseContext.getCurrentId());
         posts.setCreateTime(new Date());//设置时间
-        posts.setUserId(currentId);
+        posts.setUserId(id);
+        posts.setReview(0);
         String s1 = "text=" + posts.getText();
         System.out.println(s1);
 
@@ -103,25 +114,70 @@ public class PostsServiceImpl extends ServiceImpl<PostsMapper, Posts> implements
     }
 
     @Override
-    public R<Page> pageposts(int page, int pageSize, String name) {
-        log.info("page={},pageSize={},name={}",page,pageSize,name);
+    public R<Page> pageposts(int page, int pageSize, String name,String plateName) {
+        log.info("page={},pageSize={},name={}",page,pageSize,name,plateName);
 
         //1.构造分页构造器
         Page<Posts> pageinfo = new Page(page,pageSize);
+        Page<PostDto> postDtoPage = new Page<>();
 
-        //2.构造条件构造器
-        LambdaQueryWrapper<Posts> queryWrapper = new LambdaQueryWrapper();
         //添加一个过滤条件
-        queryWrapper.like(StringUtils.isNotEmpty(name),Posts::getTitle,name);//name不等于空时执行查询
+        if (StringUtils.isNotEmpty(plateName)) {
+            LambdaQueryWrapper<Plate> lambdaQueryWrapper = new LambdaQueryWrapper();
+            lambdaQueryWrapper.eq(Plate::getPlateName,plateName);
+            Plate one = plateService.getOne(lambdaQueryWrapper);
 
-        //排序条件
-        queryWrapper.orderByDesc(Posts::getCreateTime);//排序条件是创建时间降序
+//            Plate byId = plateService.getById(plateName);
+            LambdaQueryWrapper<Posts> queryWrapper3 = new LambdaQueryWrapper();
+            //添加一个过滤条件
+            queryWrapper3
+                    .eq(Posts::getPlateId,one.getId())
+                    .like(StringUtils.isNotEmpty(name),Posts::getTitle,name);//name不等于
+            postsService.page(pageinfo, queryWrapper3);
 
-        //3.执行查询
-        Page<Posts> page1 = postsService.page(pageinfo, queryWrapper);//传入分页构造器和条件构造器
+        }else {
+            //2.构造条件构造器
+            LambdaQueryWrapper<Posts> queryWrapper = new LambdaQueryWrapper();
+            //添加一个过滤条件
+            queryWrapper.like(StringUtils.isNotEmpty(name), Posts::getTitle, name);//name不等于空时执行查询
+
+            //排序条件
+            queryWrapper.orderByDesc(Posts::getCreateTime);//排序条件是创建时间降序
+
+            //3.执行查询
+            postsService.page(pageinfo, queryWrapper);//传入分页构造器和条件构造器
+        }
+
+        //对象拷贝
+        BeanUtils.copyProperties(pageinfo, postDtoPage, "records");
+        List<Posts> records = pageinfo.getRecords();
+
+        List<PostDto> list = records.stream().map((item) -> {//遍历records对象
+            PostDto dishDto = new PostDto();
+            //根据页面提交的用户名username查询数据库
+            LambdaQueryWrapper<User> queryWrapper1 = new LambdaQueryWrapper<>();
+            queryWrapper1.eq(User::getId,item.getUserId());
+            List<User> list1 = userService.list(queryWrapper1);
+            dishDto.setUser(list1);
+
+
+            LambdaQueryWrapper<Plate> queryWrapper2 = new LambdaQueryWrapper<>();
+            queryWrapper2.eq(Plate::getId,item.getPlateId());
+            List<Plate> list2 = plateService.list(queryWrapper2);
+            dishDto.setPlate(list2);
+
+            BeanUtils.copyProperties(item, dishDto);
+            return dishDto;
+
+        }).collect(Collectors.toList());
+
+        Page<PostDto> postDtoPage1 = postDtoPage.setRecords(list);
 
         //执行查询
-        return R.success(page1);
+        return R.success(postDtoPage1);
+
+
+
     }
 
     @Override
