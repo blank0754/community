@@ -52,7 +52,7 @@ public class PlateController {
      */
     @PostMapping("/getid")
     public R<Plate> getById(@RequestBody Plate plate){
-        log.info("根据id查询员工信息");
+        log.info("根据id查询板块信息");
         Plate byId = plateservice.getById(plate);
         return R.success(byId);
     }

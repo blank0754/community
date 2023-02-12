@@ -6,9 +6,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.community.common.BaseContext;
 import com.example.community.common.R;
 import com.example.community.dto.RoleDto;
+import com.example.community.entity.Plate;
 import com.example.community.entity.Posts;
 import com.example.community.entity.Role;
 import com.example.community.entity.User;
+import com.example.community.service.PlateService;
 import com.example.community.service.PostsService;
 import com.example.community.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
@@ -34,6 +36,9 @@ public class PostsController {
 
     @Autowired
     private PostsService postsService;
+
+    @Autowired
+    private PlateService plateService;
 
 
     /**
@@ -104,8 +109,24 @@ public class PostsController {
     @Transactional
     @CacheEvict(value = {"posts", "postid"},allEntries=true)
     public R<String> update(@RequestBody Posts posts) {
-        return postsService.update(posts);
+       postsService.updateById(posts);
+        return R.success("修改成功");
 
+    }
+
+
+    /**
+     * 根据id查询帖子
+     * @param
+     * @return
+     */
+    @PostMapping("/getid")
+    public R<Posts> getById(@RequestBody Posts post){
+        log.info("根据id查询帖子信息");
+        Posts byId = postsService.getById(post.getId());
+        String plateId = byId.getPlateId();
+        Plate PlatebyId = plateService.getById(plateId);
+        return R.success(byId).add("PlatebyId",PlatebyId);
     }
 
 

@@ -54,10 +54,10 @@ public class CommonController {
      * @return
      */
     @RequestMapping("/upload/files")
-    public R<List> filesUpload(MultipartFile[] files) throws IOException {
-        List<String> usrList = new ArrayList<>(files.length);
-        for (MultipartFile file : files) {
-            String uploadfile = ossTemplate.uploadfile(file.getOriginalFilename(), file.getInputStream());
+    public R<List> filesUpload(MultipartFile[] file) throws IOException {
+        List<String> usrList = new ArrayList<>(file.length);
+        for (MultipartFile f : file) {
+            String uploadfile = ossTemplate.uploadfile(f.getOriginalFilename(), f.getInputStream());
             usrList.add(uploadfile);
         }
         return R.success(usrList);

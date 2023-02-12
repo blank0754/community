@@ -34,7 +34,8 @@ import java.util.stream.Collectors;
 public class PostsServiceImpl extends ServiceImpl<PostsMapper, Posts> implements PostsService {
 
 
-
+    @Autowired
+    private PostsMapper postsMapper;
     @Autowired
     private PostsService postsService;
 
@@ -74,8 +75,10 @@ public class PostsServiceImpl extends ServiceImpl<PostsMapper, Posts> implements
                 System.out.println(substring1);
                 if (substring1.equals("1")) {
                     //合格存入数据库中
-                    postsService.save(posts);
-                    return R.success("帖子插入成功");
+//                    postsService.save(posts);
+                    int insert = postsMapper.insert(posts);
+                    String id1 = posts.getId();
+                    return R.success("帖子插入成功").add("id",id1);
                 }
                 if(substring1.equals("2")){
                     //转化请求的 json 数据
